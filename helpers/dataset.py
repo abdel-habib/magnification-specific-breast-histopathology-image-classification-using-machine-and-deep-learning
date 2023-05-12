@@ -1,11 +1,13 @@
 import os
-from tqdm import tqdm
 import pandas as pd
 
 class BreasKHisDataset():
     def __init__(self):
-        self.benign_dir = os.path.dirname("../BreaKHis_v1/histology_slides/breast/benign/")   
-        self.malignant_dir = os.path.dirname("../BreaKHis_v1/histology_slides/breast/malignant/")   
+        self.benign_dir = os.path.join(
+            os.getcwd(), os.path.dirname("../BreaKHis_v1/histology_slides/breast/benign/"))   
+        self.malignant_dir = os.path.join(
+            os.getcwd(), os.path.dirname("../BreaKHis_v1/histology_slides/breast/malignant/")   
+        )
         
     def get_classes(self):
         """
@@ -35,7 +37,7 @@ class BreasKHisDataset():
         """
         image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp']
         count = 0
-        for directory in tqdm(dirs):
+        for directory in dirs:
             for root, dirs, files in os.walk(directory):
                 for file in files:
                     if any(file.endswith(ext) for ext in image_extensions):
