@@ -1,8 +1,5 @@
 import os
 import tensorflow as tf
-import tensorflow.keras as K
-
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, EarlyStopping, ReduceLROnPlateau
 
 from loguru import logger
 
