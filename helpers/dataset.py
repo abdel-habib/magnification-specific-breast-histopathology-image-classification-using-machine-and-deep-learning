@@ -77,11 +77,11 @@ class BreasKHisDataset():
 
 
 # Uncomment the code below for testing the class methods
-# dataset = BreasKHisDataset()
-# classes = dataset.get_classes()
-# count = dataset.count_images(dataset.benign_dir, dataset.malignant_dir)
-# df = dataset.generate_dataset_dataframe_report()
-# print(count)
-# print(classes)
-# print(df)
+dataset = BreasKHisDataset()
+classes = dataset.get_classes()
+#count = dataset.count_images(dataset.benign_dir, dataset.malignant_dir)
+#df = dataset.generate_dataset_dataframe_report()
+#print(count)
+print(classes)
+#print(df)
 

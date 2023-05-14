@@ -7,6 +7,8 @@ sys.path.append(r'..\\helpers')
 
 from loguru import logger
 from helpers.model import DenseNetModel
+from helpers.data_split import DataSplit
+from helpers.data_ingestion import DataIngestion
 
 class BreaKHisPipeline:
     def __init__(
@@ -15,7 +17,7 @@ class BreaKHisPipeline:
             learning_rate = 0.001,
             batch_size = 8,
             data_split_train_ratio = 0.6,
-            image_size = (224, 224, 3),
+            image_size = (224, 224,3),
             num_classes=8
             ):
         
@@ -29,7 +31,18 @@ class BreaKHisPipeline:
 
         
         logger.info(f"Class Initialized: {self.__dict__}")
-
+    def split(self):
+        breakHis = DataIngestion(
+            directory="BreaKHis_v1/histology_slides/breast/",
+            sizes=self.image_size[0:2],
+            batch=self.batch_size,
+            split_ratio=self.data_split_test_ratio    
+        )
+        
+        train=breakHis.getData(123,"training")
+        test=breakHis.getData(123,"validation")
+        
+        
     def fit(self):
 
         # Get the model
@@ -40,8 +53,12 @@ class BreaKHisPipeline:
 
         model = model_object.model()
         model.summary()
+        
+        
 
 
 pipeline = BreaKHisPipeline()
 
-pipeline.fit()
+pipeline.split()
+
+#pipeline.fit()
