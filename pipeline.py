@@ -38,7 +38,6 @@ class BreaKHisPipeline:
             batch=self.batch_size,
             split_ratio=self.data_split_test_ratio    
         )
-        
         train=breakHis.getData(123,"training")
         test=breakHis.getData(123,"validation")
         
