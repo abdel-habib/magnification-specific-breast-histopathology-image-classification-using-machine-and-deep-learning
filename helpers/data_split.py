@@ -35,7 +35,7 @@ class DataSplit:
     def split_directories(self,dir_list,magnification,label):
         print('  ')
         print()
-        
+        random.seed(123)
         random.shuffle(dir_list)
         random.shuffle(dir_list)
         random.shuffle(dir_list)
@@ -52,7 +52,7 @@ class DataSplit:
         print('Length of validation: {}'.format(len(validation)))
         print('Length of test: {}'.format(len(test)))
     
-        return train, validation, test 
+        return train, validation, test
     
     def make_files(self):
 
