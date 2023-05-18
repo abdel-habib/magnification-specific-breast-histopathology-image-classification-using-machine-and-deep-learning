@@ -8,7 +8,7 @@ class DataSplit:
       self.src_dir = os.getcwd()
       self.parentfolder = ['100X','200X','400X','40X']
       self.subfolders = ['papillary_carcinoma', 'ductal_carcinoma', 'mucinous_carcinoma', 'lobular_carcinoma', 'adenosis', 'tubular_adenoma', 'fibroadenoma', 'phyllodes_tumor']
-      self.subsubfolders = ['test','validation','testing']
+      self.subsubfolders = ['test','validation','test']
       self.folderName = 'BreakHis'
       
     def get_files_for_magnification(self,home_dir,magnification):
