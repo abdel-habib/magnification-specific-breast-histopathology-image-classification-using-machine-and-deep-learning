@@ -13,6 +13,30 @@ class DenseNetModel:
         self.input_shape = input_shape
 
         logger.info(f"Class Initialized: {self.__dict__}")
+
+    def callbacks(self):
+        output_path = "../out/checkpoints/"
+
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        checkpoint_path = output_path + 'model.{epoch:02d}-{val_loss:.2f}.h5'
+
+        my_callbacks = [
+            tf.keras.callbacks.EarlyStopping(
+                monitor='val_loss',
+                patience=4),
+            tf.keras.callbacks.ModelCheckpoint(
+                filepath=checkpoint_path,
+                monitor='val_loss',
+                verbose=2,
+                save_best_only=True,
+                mode='min',
+                save_weights_only=True
+                )
+        ]
+
+        return my_callbacks
     
     def model(self):
         densenet_model = tf.keras.applications.DenseNet121(

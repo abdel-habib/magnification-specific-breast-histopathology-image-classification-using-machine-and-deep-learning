@@ -6,6 +6,7 @@ import sys
 sys.path.append(r'..\\helpers')
 
 from loguru import logger
+from helpers.focal_loss import LossMethod
 from helpers.model import DenseNetModel
 from helpers.data_ingestion import DataIngestion
 
@@ -14,7 +15,7 @@ class BreaKHisPipeline:
             self, 
             num_epochs =  25,
             learning_rate = 0.001,
-            batch_size = 8,
+            batch_size = 32,
             data_split_train_ratio = 0.6,
             image_size = (224, 224,3),
             num_classes=8
@@ -56,11 +57,8 @@ class BreaKHisPipeline:
             sizes=self.image_size[0:2],
             batch=self.batch_size   
         )
-        
-        validation = breakHis_validation.getData()
-        
-
-        
+        train=breakHis.getData(123,"training")
+        test=breakHis.getData(123,"validation")
         
         
     def fit(self):
@@ -73,12 +71,29 @@ class BreaKHisPipeline:
 
         model = model_object.model()
         model.summary()
+
+        callbacks = model_object.callbacks()
+
+        lm = LossMethod()
+
+        # Compile the model with the focal loss
+        model.compile(optimizer='adam', loss=lm.focal_loss(gamma=2.0, alpha=0.25), metrics=['accuracy'])
+
+        # Train the model
+        model.fit(x_train, 
+                  y_train, 
+                  epochs=self.n_epochs, 
+                  batch_size=self.batch_size, 
+                  validation_data=(x_test, y_test),
+                  callbacks=callbacks)
+
+
         
         
 
 
-pipeline = BreaKHisPipeline()
+# pipeline = BreaKHisPipeline()
 
-pipeline.split()
+# pipeline.split()
 
 #pipeline.fit()
