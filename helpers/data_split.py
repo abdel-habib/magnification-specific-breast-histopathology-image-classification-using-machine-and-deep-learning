@@ -7,8 +7,8 @@ class DataSplit:
     def __init__(self):
       self.src_dir = os.getcwd()
       self.parentfolder = ['100X','200X','400X','40X']
-      self.subfolders = ['papillary_carcinoma', 'ductal_carcinoma', 'mucinous_carcinoma', 'lobular_carcinoma', 'adenosis', 'tubular_adenoma', 'fibroadenoma', 'phyllodes_tumor']
-      self.subsubfolders = ['test','validation','train']
+      self.subsubfolders = ['papillary_carcinoma', 'ductal_carcinoma', 'mucinous_carcinoma', 'lobular_carcinoma', 'adenosis', 'tubular_adenoma', 'fibroadenoma', 'phyllodes_tumor']
+      self.subfolders = ['test','validation','train']
       self.folderName = 'BreakHis'
       
     def get_files_for_magnification(self,home_dir,magnification):
@@ -71,7 +71,7 @@ class DataSplit:
                     os.mkdir(subsub_folder_path)
     
     def save_images_in_folder(self,data,folder_name,label,magnification):
-        dest_dir = os.path.join(self.src_dir,'..',self.folderName,magnification,label,folder_name)
+        dest_dir = os.path.join(self.src_dir,'..',self.folderName,magnification,folder_name,label)
         for elements in data:
             shutil.copy(elements,dest_dir)
         
@@ -79,7 +79,7 @@ class DataSplit:
     def split_data(self):
         home_dir = os.path.join(self.src_dir, os.path.dirname("../BreaKHis_v1/histology_slides/breast/"))
         for magnifications in self.parentfolder:
-            for label in self.subfolders:
+            for label in self.subsubfolders:
                 result,folder = self.get_files_for_magnification(home_dir,magnifications)
                 labels_array = self.search_label_in_array(result,label)
                 train, validation, test = self.split_directories(labels_array,magnifications,label)
