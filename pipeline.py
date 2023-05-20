@@ -5,6 +5,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
 sys.path.append(r'..\\helpers')
 
+import tensorflow as tf
 from loguru import logger
 from helpers.focal_loss import LossMethod
 from helpers.model import DenseNetModel
@@ -13,7 +14,7 @@ from helpers.data_ingestion import DataIngestion
 class BreaKHisPipeline:
     def __init__(
             self, 
-            num_epochs =  25,
+            num_epochs =  2,
             learning_rate = 0.001,
             batch_size = 32,
             data_split_train_ratio = 0.6,
@@ -58,6 +59,8 @@ class BreaKHisPipeline:
             batch=self.batch_size   
         )
         validation = breakHis_validation.getData()
+
+        return train, test, validation
         
         
     def fit(self):
@@ -74,25 +77,35 @@ class BreaKHisPipeline:
         callbacks = model_object.callbacks()
 
         lm = LossMethod()
+        train, _, validation = self.split()
+
 
         # Compile the model with the focal loss
         model.compile(optimizer='adam', loss=lm.focal_loss(gamma=2.0, alpha=0.25), metrics=['accuracy'])
 
         # Train the model
-        model.fit(x_train, 
-                  y_train, 
+        model.fit(train,
                   epochs=self.n_epochs, 
                   batch_size=self.batch_size, 
-                  validation_data=(x_test, y_test),
+                  validation_data=validation,
                   callbacks=callbacks)
+        
+        # save model without optimizer, ready for prod 
+        logger.info('Finished Training. Saving Model.')
+        output_path = "../out/model/"
+
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        tf.keras.models.save_model(
+            model, f"../out/model/model.BreakHis.h5", include_optimizer=False, save_format='h5'
+        )
 
 
         
         
 
 
-# pipeline = BreaKHisPipeline()
+pipeline = BreaKHisPipeline()
 
-# pipeline.split()
-
-#pipeline.fit()
+pipeline.fit()
