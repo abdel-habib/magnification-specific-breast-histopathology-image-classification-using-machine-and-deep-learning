@@ -31,6 +31,7 @@ class BreaKHisPipeline:
 
         
         logger.info(f"Class Initialized: {self.__dict__}")
+
     def split(self):
         breakHis = DataIngestion(
             directory="BreaKHis_v1/histology_slides/breast/",
@@ -40,7 +41,6 @@ class BreaKHisPipeline:
         )
         train=breakHis.getData(123,"training")
         test=breakHis.getData(123,"validation")
-        
         
     def fit(self):
 
