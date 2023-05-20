@@ -14,9 +14,9 @@ from helpers.data_ingestion import DataIngestion
 class BreaKHisPipeline:
     def __init__(
             self, 
-            num_epochs =  2,
-            learning_rate = 0.001,
-            batch_size = 256,
+            num_epochs =  5,
+            learning_rate = 0.0001,
+            batch_size = 32,
             data_split_train_ratio = 0.6,
             image_size = (224, 224,3),
             num_classes=8
@@ -92,10 +92,12 @@ class BreaKHisPipeline:
 
         # print(num_classes)
 
-
+        # Defining optimizer
+        opt = tf.keras.optimizers.Adam(
+                learning_rate=self.learning_rate)
 
         # Compile the model with the focal loss
-        model.compile(optimizer='adam', loss=lm.focal_loss(gamma=2.0, alpha=0.25), metrics=['accuracy'])
+        model.compile(optimizer=opt, loss=lm.focal_loss(gamma=2.0, alpha=0.25), metrics=['accuracy'])
 
         # Train the model
         model.fit(train,
