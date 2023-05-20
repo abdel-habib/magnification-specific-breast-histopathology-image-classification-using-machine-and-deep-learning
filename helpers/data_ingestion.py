@@ -21,10 +21,5 @@ class DataIngestion:
             )
         
         return data
-    
-    def get_Data_Structure(self,Magnifications):
-
-        
-        return train, test, validation
         
         

@@ -15,7 +15,7 @@ class DenseNetModel:
         logger.info(f"Class Initialized: {self.__dict__}")
 
     def callbacks(self):
-        output_path = "/out/checkpoints/"
+        output_path = "out/checkpoints/"
 
         if not os.path.exists(output_path):
             os.makedirs(output_path)
