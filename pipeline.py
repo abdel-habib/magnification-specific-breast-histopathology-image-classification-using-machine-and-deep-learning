@@ -54,21 +54,28 @@ class BreaKHisPipeline:
         model = model_object.model()
         model.summary()
 
+        callbacks = model_object.callbacks()
+
         lm = LossMethod()
 
         # Compile the model with the focal loss
         model.compile(optimizer='adam', loss=lm.focal_loss(gamma=2.0, alpha=0.25), metrics=['accuracy'])
 
         # Train the model
-        # model.fit(x_train, y_train, epochs=10, batch_size=32, validation_data=(x_test, y_test))
+        model.fit(x_train, 
+                  y_train, 
+                  epochs=self.n_epochs, 
+                  batch_size=self.batch_size, 
+                  validation_data=(x_test, y_test),
+                  callbacks=callbacks)
 
 
         
         
 
 
-pipeline = BreaKHisPipeline()
+# pipeline = BreaKHisPipeline()
 
-pipeline.split()
+# pipeline.split()
 
 #pipeline.fit()
