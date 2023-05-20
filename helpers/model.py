@@ -46,6 +46,10 @@ class DenseNetModel:
             input_shape= self.input_shape,
             pooling=None,  # Remove global average pooling
         )
+
+        # Fine-tune the last few layers of the pre-trained model
+        for layer in densenet_model.layers[:-10]:
+            layer.trainable = False
         
         # Freeze the pre-trained layers
         densenet_model.trainable = False
@@ -72,7 +76,7 @@ class DenseNetModel:
         model = tf.keras.Model(inputs=densenet_model.input, outputs=predictions)
         
         # Compile the model
-        model.compile(metrics=["accuracy"])
+        # model.compile(metrics=["accuracy"])
 
         return model
     
