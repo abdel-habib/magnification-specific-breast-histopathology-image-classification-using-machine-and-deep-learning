@@ -108,13 +108,13 @@ class BreaKHisPipeline:
         
         # save model without optimizer, ready for prod 
         logger.info('Finished Training. Saving Model.')
-        output_path = "/out/model/"
+        output_path = "out/model/"
 
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
         tf.keras.models.save_model(
-            model, f"/out/model/model.BreakHis.h5", include_optimizer=False, save_format='h5'
+            model, f"out/model/model.BreakHis.h5", include_optimizer=False, save_format='h5'
         )
 
 
