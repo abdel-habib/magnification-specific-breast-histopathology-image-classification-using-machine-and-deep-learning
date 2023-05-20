@@ -16,7 +16,7 @@ class BreaKHisPipeline:
             self, 
             num_epochs =  2,
             learning_rate = 0.001,
-            batch_size = 32,
+            batch_size = 256,
             data_split_train_ratio = 0.6,
             image_size = (224, 224,3),
             num_classes=8
@@ -79,6 +79,20 @@ class BreaKHisPipeline:
         lm = LossMethod()
         train, _, validation = self.split()
 
+        # print(train)
+
+        # target_values = []
+
+        # for batch in validation:
+        #     _, targets = batch
+        #     target_values.extend(targets.numpy())
+
+        # # Determine the number of unique classes
+        # num_classes = len(set(target_values))
+
+        # print(num_classes)
+
+
 
         # Compile the model with the focal loss
         model.compile(optimizer='adam', loss=lm.focal_loss(gamma=2.0, alpha=0.25), metrics=['accuracy'])
@@ -92,13 +106,13 @@ class BreaKHisPipeline:
         
         # save model without optimizer, ready for prod 
         logger.info('Finished Training. Saving Model.')
-        output_path = "../out/model/"
+        output_path = "/out/model/"
 
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
         tf.keras.models.save_model(
-            model, f"../out/model/model.BreakHis.h5", include_optimizer=False, save_format='h5'
+            model, f"/out/model/model.BreakHis.h5", include_optimizer=False, save_format='h5'
         )
 
 
