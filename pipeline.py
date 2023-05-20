@@ -6,6 +6,7 @@ import sys
 sys.path.append(r'..\\helpers')
 
 from loguru import logger
+from helpers.focal_loss import LossMethod
 from helpers.model import DenseNetModel
 from helpers.data_split import DataSplit
 from helpers.data_ingestion import DataIngestion
@@ -15,7 +16,7 @@ class BreaKHisPipeline:
             self, 
             num_epochs =  25,
             learning_rate = 0.001,
-            batch_size = 8,
+            batch_size = 32,
             data_split_train_ratio = 0.6,
             image_size = (224, 224,3),
             num_classes=8
@@ -31,6 +32,7 @@ class BreaKHisPipeline:
 
         
         logger.info(f"Class Initialized: {self.__dict__}")
+
     def split(self):
         breakHis = DataIngestion(
             directory="BreaKHis_v1/histology_slides/breast/",
@@ -52,6 +54,16 @@ class BreaKHisPipeline:
 
         model = model_object.model()
         model.summary()
+
+        lm = LossMethod()
+
+        # Compile the model with the focal loss
+        model.compile(optimizer='adam', loss=lm.focal_loss(gamma=2.0, alpha=0.25), metrics=['accuracy'])
+
+        # Train the model
+        # model.fit(x_train, y_train, epochs=10, batch_size=32, validation_data=(x_test, y_test))
+
+
         
         
 
