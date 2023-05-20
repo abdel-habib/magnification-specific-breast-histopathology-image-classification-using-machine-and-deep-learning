@@ -57,8 +57,7 @@ class BreaKHisPipeline:
             sizes=self.image_size[0:2],
             batch=self.batch_size   
         )
-        train=breakHis.getData(123,"training")
-        test=breakHis.getData(123,"validation")
+        validation = breakHis_validation.getData()
         
         
     def fit(self):
