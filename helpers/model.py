@@ -39,7 +39,8 @@ class DenseNetModel:
         return my_callbacks
     
     def model(self):
-        densenet_model = tf.keras.applications.DenseNet121(
+        # DenseNet121 was the initial model
+        densenet_model = tf.keras.applications.DenseNet169(
             include_top=False,
             weights="imagenet",
             input_tensor=None,

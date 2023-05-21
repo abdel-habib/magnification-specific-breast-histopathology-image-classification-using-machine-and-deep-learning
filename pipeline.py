@@ -10,16 +10,19 @@ from loguru import logger
 from helpers.focal_loss import LossMethod
 from helpers.model import DenseNetModel
 from helpers.data_ingestion import DataIngestion
+from helpers.data_augmentation import DataAugmentation
 
 class BreaKHisPipeline:
     def __init__(
             self, 
-            num_epochs =  5,
-            learning_rate = 0.0001,
+            num_epochs =  50,
+            learning_rate = 0.001,
             batch_size = 32,
             data_split_train_ratio = 0.6,
             image_size = (224, 224,3),
-            num_classes=8
+            num_classes=8,
+            magnification = '40X'
+
             ):
         
         self.n_epochs               = num_epochs
@@ -29,24 +32,22 @@ class BreaKHisPipeline:
         self.data_split_train_ratio = data_split_train_ratio
         self.data_split_test_ratio  = round(1 - data_split_train_ratio, 2)
         self.image_size             = image_size
+        self.magnification          = magnification
 
         
         logger.info(f"Class Initialized: {self.__dict__}")
         
-    def split(self):
-        
-        Magnifications='100X'
-        
+    def split(self):        
         
         breakHis_train = DataIngestion(
-            directory="BreakHis/"+Magnifications+"/train/",
+            directory="BreakHis/"+self.magnification+"/train/",
             sizes=self.image_size[0:2],
             batch=self.batch_size   
         )
         train=breakHis_train.getData()
         
         breakHis_test = DataIngestion(
-            directory="BreakHis/"+Magnifications+"/test/",
+            directory="BreakHis/"+self.magnification+"/test/",
             sizes=self.image_size[0:2],
             batch=self.batch_size   
         )
@@ -54,7 +55,7 @@ class BreaKHisPipeline:
         test = breakHis_test.getData()
         
         breakHis_validation = DataIngestion(
-            directory="BreakHis/"+Magnifications+"/validation/",
+            directory="BreakHis/"+self.magnification+"/validation/",
             sizes=self.image_size[0:2],
             batch=self.batch_size   
         )
@@ -77,20 +78,15 @@ class BreaKHisPipeline:
         callbacks = model_object.callbacks()
 
         lm = LossMethod()
-        train, _, validation = self.split()
 
-        # print(train)
+        # We replace keras dataset with augmentation generator
+        # train, _, validation = self.split()
 
-        # target_values = []
-
-        # for batch in validation:
-        #     _, targets = batch
-        #     target_values.extend(targets.numpy())
-
-        # # Determine the number of unique classes
-        # num_classes = len(set(target_values))
-
-        # print(num_classes)
+        train_gen, valid_gen, test_gen = DataAugmentation(
+            target_size = self.image_size[0:2],
+            train_path=f'BreakHis/{self.magnification}/train/',
+            valid_path=f'BreakHis/{self.magnification}/validation/',
+            test_path=f'BreakHis/{self.magnification}/test/').PerformAugmentation()
 
         # Defining optimizer
         opt = tf.keras.optimizers.Adam(
@@ -100,10 +96,12 @@ class BreaKHisPipeline:
         model.compile(optimizer=opt, loss=lm.focal_loss(gamma=2.0, alpha=0.25), metrics=['accuracy'])
 
         # Train the model
-        model.fit(train,
+        valX, valY = valid_gen.next()
+
+        model.fit(train_gen,
                   epochs=self.n_epochs, 
                   batch_size=self.batch_size, 
-                  validation_data=validation,
+                  validation_data=(valX, valY),
                   callbacks=callbacks)
         
         # save model without optimizer, ready for prod 

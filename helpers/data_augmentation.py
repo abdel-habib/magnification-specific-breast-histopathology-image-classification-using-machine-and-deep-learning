@@ -1,66 +1,53 @@
 from keras.preprocessing.image import ImageDataGenerator
-from skimage import io
-import cv2
-import numpy as np
-import os 
 
-from data_ingestion import DataIngestion
+class DataAugmentation:
+    def __init__(self, target_size, train_path, valid_path, test_path):
+        self.target_size = target_size
+        self.train_path = train_path
+        self.valid_path = valid_path
+        self.test_path = test_path
+        self.random_seed = 123
+        
+    def PerformAugmentation(self):
+        train_datagen = ImageDataGenerator(
+            rescale=1. / 255.0,             
+            rotation_range=45,              
+            width_shift_range=0.2,          
+            height_shift_range=0.2,         
+            shear_range=0.2,
+            zoom_range=0.2,                 
+            horizontal_flip=True,           
+            brightness_range=(0.9, 1.1),    
+            fill_mode='nearest')
 
-
-# Construct an instance of the ImageDataGenerator class
-# Pass the augmentation parameters through the constructor 
-breakHis = DataIngestion(
-    directory="BreaKHis_v1/histology_slides/breast/",
-    sizes=(244, 244),
-    batch=32,
-    split_ratio=0.4    
-)
-
-train=breakHis.getData(123,"training")
-
-datagen = ImageDataGenerator(
-        rotation_range=45,     #Random rotation between 0 and 45
-        width_shift_range=0.2,   #% shift
-        height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True,
-        fill_mode='constant', cval=125)
-"""
-        .flow_from_directory(
-            directory=  ,
-            image_size=(244, 244),
-            batch_size=32,
+        train_gen = train_datagen.flow_from_directory(
+            self.train_path,
+            target_size=self.target_size,
             color_mode='rgb',
             class_mode= 'categorical',
-            seed=123,
-            subset="training",            
-            shuffle=True
-        )
+            batch_size=32,
+            shuffle=True,
+            seed=self.random_seed)
+        
+        valid_test_datagen = ImageDataGenerator(
+            rescale=1. / 255.0             
+            )
 
-"""
-print(datagen)
+        valid_gen = valid_test_datagen.flow_from_directory(
+            self.valid_path,
+            target_size=self.target_size,
+            color_mode='rgb',
+            class_mode= 'categorical',
+            batch_size=64, #32
+            shuffle=True,
+            seed=self.random_seed)
 
-# Loading a sample image  
-# C:\Users\Administrador\VisualStudioProjects\breast-histopathology-classification\BreaKHis_v1\histology_slides\breast\benign\SOB\adenosis\SOB_B_A_14-22549AB\40X\SOB_B_A-14-22549AB-40-001.png
-path_try = os.path.dirname("BreaKHis_v1/histology_slides/breast/benign/SOB/adenosis/")
-path = os.path.join(
-    os.getcwd(),
-    path_try, "SOB_B_A_14-22549AB", "40X", "SOB_B_A-14-22549AB-40-001.png"
-)
-# path_try = ('../BreaKHis_v1/histology_slides/breast/benign/SOB/adenosis/SOB_B_A_14-22549AB/40X/SOB_B_A-14-22549AB-40-001.png')
-x = cv2.imread(path)  #Array with shape (256, 256, 3)
-
-print(x)
-
-x = x.reshape((1, ) + x.shape)
-
-i = 0
-for batch in datagen.flow_(x, batch_size=16,  
-                          save_to_dir='../augmented', 
-                          save_prefix='aug', 
-                          save_format='png',
-                          ):
-    i += 1
-    if i > 20:
-        break
+        test_gen = valid_test_datagen.flow_from_directory(
+            self.test_path,
+            target_size=self.target_size,
+            color_mode='rgb',
+            class_mode= 'categorical',
+            batch_size=1024,
+            shuffle=False)
+        
+        return train_gen, valid_gen, test_gen
