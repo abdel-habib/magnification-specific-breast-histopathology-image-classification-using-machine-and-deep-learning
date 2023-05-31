@@ -97,7 +97,8 @@ class DenseNetModel:
         # Reduce the size of the feature map
         x = tf.keras.layers.Conv2D(64, (1, 1), activation="relu")(x)
         x = tf.keras.layers.AveragePooling2D((2, 2), strides=(2, 2), padding="same")(x)
-        
         return x
+    
+    
 
 
