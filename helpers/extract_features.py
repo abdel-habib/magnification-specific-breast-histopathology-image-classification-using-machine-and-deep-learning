@@ -7,6 +7,7 @@ import  os
 from tqdm import tqdm
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
+import numpy as np
 
 from sklearn.feature_selection import SelectKBest, RFE
 from sklearn.linear_model import LinearRegression
@@ -16,7 +17,7 @@ from sklearn.model_selection import cross_val_score
 class FeatureExtractor:
     def __init__(self):
         self.base_model = DenseNet169(include_top=False, weights='imagenet')
-        self.n_features = 15000
+        self.n_features = 1500
 
         logger.info(f"Class Initialized: {self.__dict__}")
 
@@ -86,7 +87,8 @@ class FeatureExtractor:
         selected_features = []
         best_score = -np.inf
         
-        for n_features in tqdm(range(1, min(max_features, len(X.columns))+1)):
+        for n_features in range(1, min(max_features, len(X.columns))+1):
+            logger.info("Loop iteration...")
             # Select the top n features based on correlation
             top_features = sorted_features[:n_features].index.tolist()
             X_corr_selected = X[top_features]
@@ -95,19 +97,10 @@ class FeatureExtractor:
             rfe_selector = RFE(estimator=LinearRegression(), n_features_to_select=n_features)
             X_rfe_selected = rfe_selector.fit_transform(X, y)
             
-            # Use cross-validation to evaluate performance
-            model = LinearRegression()
-            corr_scores = cross_val_score(model, X_corr_selected, y, cv=5)
-            rfe_scores = cross_val_score(model, X_rfe_selected, y, cv=5)
-            
-            # Average cross-validation scores
-            corr_avg_score = np.mean(corr_scores)
-            rfe_avg_score = np.mean(rfe_scores)
-            
             # Check if RFE score is better than correlation score
-            if rfe_avg_score > corr_avg_score and rfe_avg_score > best_score:
+            if rfe_selector.score(X_rfe_selected, y) > best_score:
                 selected_features = X.columns[rfe_selector.get_support()].tolist()
-                best_score = rfe_avg_score
+                best_score = rfe_selector.score(X_rfe_selected, y)
         
         # Create a new DataFrame with the selected features and target
         selected_data = data[selected_features + [data.columns[-1]]]
