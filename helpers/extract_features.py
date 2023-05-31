@@ -8,6 +8,11 @@ from tqdm import tqdm
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
 
+from sklearn.feature_selection import SelectKBest, RFE
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score
+
+
 class FeatureExtractor:
     def __init__(self):
         self.base_model = DenseNet169(include_top=False, weights='imagenet')
@@ -63,3 +68,57 @@ class FeatureExtractor:
         data.to_csv(os.path.join(output_path, f'breakhis_features_{split}.csv'), index=False, header=False)
 
         return features, labels, encoded_labels
+    
+    def feature_selection(self, csv_dir, max_features, split):
+        # Read the CSV file into a pandas DataFrame
+        data = pd.read_csv(csv_dir, header=None)
+        
+        # Separate the features and target variable
+        X = data.iloc[:, :-1]
+        y = data.iloc[:, -1]
+        
+        # Calculate correlation coefficients
+        corr_matrix = np.abs(X.corrwith(y))
+        
+        # Sort features based on correlation
+        sorted_features = corr_matrix.sort_values(ascending=False)
+        
+        selected_features = []
+        best_score = -np.inf
+        
+        for n_features in tqdm(range(1, min(max_features, len(X.columns))+1)):
+            # Select the top n features based on correlation
+            top_features = sorted_features[:n_features].index.tolist()
+            X_corr_selected = X[top_features]
+            
+            # Recursive Feature Elimination (RFE)
+            rfe_selector = RFE(estimator=LinearRegression(), n_features_to_select=n_features)
+            X_rfe_selected = rfe_selector.fit_transform(X, y)
+            
+            # Use cross-validation to evaluate performance
+            model = LinearRegression()
+            corr_scores = cross_val_score(model, X_corr_selected, y, cv=5)
+            rfe_scores = cross_val_score(model, X_rfe_selected, y, cv=5)
+            
+            # Average cross-validation scores
+            corr_avg_score = np.mean(corr_scores)
+            rfe_avg_score = np.mean(rfe_scores)
+            
+            # Check if RFE score is better than correlation score
+            if rfe_avg_score > corr_avg_score and rfe_avg_score > best_score:
+                selected_features = X.columns[rfe_selector.get_support()].tolist()
+                best_score = rfe_avg_score
+        
+        # Create a new DataFrame with the selected features and target
+        selected_data = data[selected_features + [data.columns[-1]]]
+        
+        # Save the DataFrame to a CSV file
+        output_path = r"../out/features_selected/"
+
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        # Save the selected data to a new CSV file
+        selected_data.to_csv(os.path.join(output_path, f'breakhis_features_{split}.csv'), index=False, header=False)
+        
+        return selected_features
