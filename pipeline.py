@@ -20,13 +20,13 @@ import numpy as np
 class BreaKHisPipeline:
     def __init__(
             self, 
-            num_epochs =  50,
-            learning_rate = 0.001,
+            num_epochs =  80,
+            learning_rate = 0.003,
             batch_size = 32,
             data_split_train_ratio = 0.6,
             image_size = (224, 224,3),
             num_classes=8,
-            magnification = '40X'
+            magnification = '400X'
 
             ):
         
