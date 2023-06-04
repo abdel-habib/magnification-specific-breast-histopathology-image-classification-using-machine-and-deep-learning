@@ -12,6 +12,9 @@ import numpy as np
 from sklearn.feature_selection import SelectKBest, RFE
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import LassoCV
+from sklearn.preprocessing import StandardScaler
 
 
 class FeatureExtractor:
@@ -27,7 +30,7 @@ class FeatureExtractor:
         img = np.expand_dims(img, axis=0)  # Add batch dimension
         img = preprocess_input(img)  # Preprocess input according to DenseNet requirements
         features = self.base_model.predict(img)  # Extract features using DenseNet
-        return features.flatten()[:self.n_features]  # Flatten the features to a 1D array
+        return features.flatten()  # Flatten the features to a 1D array
 
     def extract_features(self, magnification, split):
         dataset_path = f'../BreakHis/{magnification}/{split}/'
@@ -71,39 +74,38 @@ class FeatureExtractor:
         return features, labels, encoded_labels
     
     def feature_selection(self, csv_dir, max_features, split):
-        # Read the CSV file into a pandas DataFrame
-        data = pd.read_csv(csv_dir, header=None)
-        
-        # Separate the features and target variable
-        X = data.iloc[:, :-1]
-        y = data.iloc[:, -1]
-        
-        # Calculate correlation coefficients
-        corr_matrix = np.abs(X.corrwith(y))
-        
-        # Sort features based on correlation
-        sorted_features = corr_matrix.sort_values(ascending=False)
-        
-        selected_features = []
-        best_score = -np.inf
-        
-        for n_features in range(1, min(max_features, len(X.columns))+1):
-            logger.info("Loop iteration...")
-            # Select the top n features based on correlation
-            top_features = sorted_features[:n_features].index.tolist()
-            X_corr_selected = X[top_features]
-            
-            # Recursive Feature Elimination (RFE)
-            rfe_selector = RFE(estimator=LinearRegression(), n_features_to_select=n_features)
-            X_rfe_selected = rfe_selector.fit_transform(X, y)
-            
-            # Check if RFE score is better than correlation score
-            if rfe_selector.score(X_rfe_selected, y) > best_score:
-                selected_features = X.columns[rfe_selector.get_support()].tolist()
-                best_score = rfe_selector.score(X_rfe_selected, y)
-        
-        # Create a new DataFrame with the selected features and target
-        selected_data = data[selected_features + [data.columns[-1]]]
+        logger.info(f"Starting feature selection on {split} split...")
+        data = np.genfromtxt(csv_dir, delimiter=',')
+
+        # Split the data into features (X) and target variable (y)
+        X = data[:, :-1]  # All columns except the last one
+        y = data[:, -1]   # Last column
+
+        # Standardize the training predictors
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
+
+        # Perform Lasso regularization with alpha=0.01
+        selected_features = self.perform_lasso_regularization(X, y)
+
+        # Select the features from the data
+        selected_data = self.select_features_by_indices(data, selected_features)
+
+        # Perform RFE for further feature selection
+        n_features = max_features  # Example: Select max 10 features
+        selected_features_rfe = self.perform_rfe(selected_data, y, n_features)
+
+        # Select the features from the data based on RFE selection
+        selected_data_rfe = self.select_features_by_indices(selected_data, selected_features_rfe)
+
+        # Convert the selected data to a pandas DataFrame
+        selected_df = pd.DataFrame(selected_data_rfe)
+
+        # Join y with selected_df as the last column
+        selected_df_with_y = pd.concat([selected_df, pd.DataFrame(y)], axis=1)
+
+
+        logger.info(f"Finished feature selection on {split} split. New dimensions are {selected_df_with_y.shape}")
         
         # Save the DataFrame to a CSV file
         output_path = r"../out/features_selected/"
@@ -112,6 +114,60 @@ class FeatureExtractor:
             os.makedirs(output_path)
 
         # Save the selected data to a new CSV file
-        selected_data.to_csv(os.path.join(output_path, f'breakhis_features_{split}.csv'), index=False, header=False)
+        selected_df_with_y.to_csv(os.path.join(output_path, f'breakhis_selected_features_{split}.csv'), index=False, header=False)
         
+        return selected_features        
+    
+    def perform_lasso_regularization(self, X, y, alpha=0.01):
+        """
+        Perform Lasso regularization for feature selection with a given alpha value.
+
+        Args:
+            X: The input feature matrix.
+            y: The target variable.
+            alpha: The regularization parameter (default: 0.01).
+
+        Returns:
+            selected_features: A list of selected feature indices.
+        """
+        lasso = Lasso(alpha=alpha)
+        lasso.fit(X, y)
+
+        selected_features = np.nonzero(lasso.coef_)[0]
+
+        return selected_features
+    
+    def select_features_by_indices(self, data, selected_indices):
+        """
+        Select features from the data based on the given indices.
+
+        Args:
+            data: The input data.
+            selected_indices: A list of selected feature indices.
+
+        Returns:
+            selected_data: The selected data containing only the selected features.
+        """
+        selected_data = data[:, selected_indices]
+
+        return selected_data
+    
+    def perform_rfe(self, selected_data, y, n_features):
+        """
+        Perform Recursive Feature Elimination (RFE) for further feature selection.
+
+        Args:
+            selected_data: The selected data containing only the selected features.
+            y: The target variable.
+            n_features: The desired number of features to select.
+
+        Returns:
+            selected_features: A list of selected feature indices.
+        """
+        estimator = LinearRegression()
+        rfe = RFE(estimator, n_features_to_select=n_features)
+        rfe.fit(selected_data, y)
+
+        selected_features = np.nonzero(rfe.support_)[0]
+
         return selected_features
