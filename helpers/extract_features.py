@@ -15,6 +15,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import LassoCV
 from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import SelectKBest, chi2
 
 
 class FeatureExtractor:
@@ -93,13 +94,21 @@ class FeatureExtractor:
 
         # Perform RFE for further feature selection
         n_features = max_features  # Example: Select max 10 features
-        selected_features_rfe = self.perform_rfe(selected_data, y, n_features)
+        # selected_features_rfe = self.perform_rfe(selected_data, y, n_features)
 
         # Select the features from the data based on RFE selection
-        selected_data_rfe = self.select_features_by_indices(selected_data, selected_features_rfe)
+        # selected_data_rfe = self.select_features_by_indices(selected_data, selected_features_rfe)
+        
+        # Perform feature selection with SelectKBest
+        k = max_features  # Example: Select top 10 features
+        selector = SelectKBest(chi2, k=k)
+        selector.fit(selected_data, y)
+        selected_features_kbest = selector.get_support()
+
+        selected_data_kbest = self.select_features_by_indices(selected_data, selected_features_kbest)
 
         # Convert the selected data to a pandas DataFrame
-        selected_df = pd.DataFrame(selected_data_rfe)
+        selected_df = pd.DataFrame(selected_data_kbest)
 
         # Join y with selected_df as the last column
         selected_df_with_y = pd.concat([selected_df, pd.DataFrame(y)], axis=1)

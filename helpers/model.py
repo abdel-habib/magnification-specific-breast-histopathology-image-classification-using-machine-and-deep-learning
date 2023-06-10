@@ -2,6 +2,7 @@ import os
 import tensorflow as tf
 
 from loguru import logger
+from tensorflow.keras.callbacks import TensorBoard
 
 class DenseNetModel:
     def __init__(self, 
@@ -33,7 +34,9 @@ class DenseNetModel:
                 save_best_only=True,
                 mode='min',
                 save_weights_only=True
-                )
+                ),
+                TensorBoard(log_dir='./logs')  # TensorBoard callback
+
         ]
 
         return my_callbacks

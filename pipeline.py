@@ -183,6 +183,6 @@ class BreaKHisPipeline:
         
 
 
-# pipeline = BreaKHisPipeline()
+pipeline = BreaKHisPipeline()
 
 # pipeline.fit()
